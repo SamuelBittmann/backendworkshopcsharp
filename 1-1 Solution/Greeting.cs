@@ -1,7 +1,7 @@
 using System;
 
 /*
-Exercise 1
+Exercise 1 (Solution)
 ----------
 
 Modify the code below so that the program returns either a formal or an
