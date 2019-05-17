@@ -8,8 +8,7 @@ Modify the code below so that the program returns either a formal or an
 informal greeting according to the following logic:
 If the entered age is below 18 the user should be greeted with
 "Hi, <first name>". If the age is 18 or above, the greeting should read
-"Hello, mr./mrs. <last name>". There needs to be no distinctions between
-genders.
+"Hello, mr./mrs. <last name>". No distinction between genders is necessary.
  */
 public class Greeting
 {
