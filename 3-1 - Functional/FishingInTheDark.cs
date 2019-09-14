@@ -47,7 +47,7 @@ public class Game
             {
                 direction = directions[random.Next(0, 4)];
                 newTargetPosition = target.Add(direction);
-            } while(newTargetPosition.X < 0 || newTargetPosition.X >= mapSizeX || newTargetPosition.Y < 0 || newTargetPosition.Y >= mapSizeY);
+            } while(newTargetPosition.X < 0 || newTargetPosition.X >= mapSizeX || newTargetPosition.Y < 0 || newTargetPosition.Y >= mapSizeY || (newTargetPosition.X == player.X && newTargetPosition.Y == player.Y));
             target = newTargetPosition;
 
             return false;
