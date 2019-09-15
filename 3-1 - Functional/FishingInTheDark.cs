@@ -3,6 +3,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+/*
+Exercise 3b
+-----------
+
+You are a game developer and you have just finished your next masterpiece.
+Two game publishers from two different countries are interested in publishing
+your work in their respective country. However, they can't seem to agree on
+two minor details: Publisher A wants all text, that is being displayed, to be
+preceeded by a '>' character. And publisher B wants the units converted to
+the imperial system. Make your game customizable using old fashioned delegates
+And test the variants for both publishers in the Program class.
+
+Publisher B has provided you with an implementation for the conversion.
+
+You can ignore everything inside the region GameInternal.
+*/
+
 #region GameInternal
 
 public struct Coordinate : IEquatable<Coordinate>
@@ -138,17 +155,22 @@ public class Game
         { ConsoleKey.LeftArrow, Coordinate.Left }
     };
 
+    //(1) Add a constructor which receives delegate methods for formatting the output.
+    //    Make one for formatting a line and one for converting the distance in meters into
+    //    a display string.
+
     public void Run()
     {
         var game = new GameController();
 
+        //(2) Format all strings before writing them to the console
         Console.WriteLine("Welcome to 'Fishing in the dark'");
         Console.WriteLine();
         Console.WriteLine("Use the arrow keys and try to catch the robber.");
         Console.WriteLine("You can move straight by pressing the same arrow key twice or diagonally by pressing two different arrow keys subsequently.");
         Console.WriteLine("After each step you will be told how far away you are from the robber.");
         Console.WriteLine();
-        Console.WriteLine($"You are {game.Distance:0.00} meters away.");
+        WriteDistance();
         Console.WriteLine();
 
         var result = (Moved: true, Won: false);
@@ -157,6 +179,7 @@ public class Game
             var keys = new List<ConsoleKey>();
             keys.Add(Console.ReadKey().Key);
             keys.Add(Console.ReadKey().Key);
+            Console.Write("\n");
 
             var movement = keys
                 .Where(k => keyMap.Keys.Contains(k))
@@ -179,12 +202,18 @@ public class Game
             }
             else
             {
-                Console.WriteLine($"You are {game.Distance:0.00} meters away.");
+                WriteDistance();
                 Console.WriteLine();
             }
         } while (!result.Won);
 
         Console.WriteLine($"Yay!! You caught the bad guy in {game.StepCount} steps :)");
+    }
+
+    private void WriteDistance()
+    {
+        //(3) Call the delegate for formatting the distance
+        Console.WriteLine($"You are {game.Distance:0.00} meters away.");
     }
 }
 
@@ -194,5 +223,11 @@ public static class Program
     {
         var game = new Game();
         game.Run();
+    }
+
+    private static string FormatDistanceImperial(double distanceInMeters)
+    {
+        var feet = distanceInMeters / 0.3048;
+        return $"{feet:0.00} feet";
     }
 }
