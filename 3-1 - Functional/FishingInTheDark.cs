@@ -3,7 +3,65 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public class Game
+#region HelperClasses
+
+public struct Coordinate : IEquatable<Coordinate>
+{
+    public readonly int X;
+    public readonly int Y;
+
+    public Coordinate(int x, int y)
+    {
+        X = x;
+        Y = y;
+    }
+
+    public Coordinate Add(Coordinate other) 
+    {
+        return new Coordinate(X + other.X, Y + other.Y);
+    }
+
+    public double Distance(Coordinate other)
+    {
+        return Math.Sqrt(Math.Pow(X - other.X, 2) + Math.Pow(Y - other.Y, 2));
+    }
+
+    public int ManhattanDistance(Coordinate other)
+    {
+        return Math.Abs(X - other.X) + Math.Abs(Y - other.Y);
+    }
+
+    public override bool Equals(object other)
+    {
+        return other is Coordinate
+            ? Equals((Coordinate) other)
+            : false;
+    }
+
+    public bool Equals(Coordinate other)
+    {
+        return X == other.X && Y == other.Y;
+    }
+
+    public override int GetHashCode()
+    {
+        return X ^ Y;
+    }
+
+    public static bool operator ==(Coordinate left, Coordinate right) => left.Equals(right);
+    public static bool operator!=(Coordinate left, Coordinate right) => !left.Equals(right);
+
+    public static Coordinate Up = new Coordinate(0, -1);
+    public static Coordinate Down = new Coordinate(0, 1);
+    public static Coordinate Left = new Coordinate(-1, 0);
+    public static Coordinate Right = new Coordinate(1, 0);
+    public static Coordinate Zero = new Coordinate(0, 0);
+}
+
+#endregion
+
+
+public class GameController
 {
     private const int mapSizeX = 10;
     private const int mapSizeY = 10;
@@ -20,7 +78,7 @@ public class Game
     private readonly Random random = new Random();
     public int StepCount { get; private set; } = 0;
 
-    public Game()
+    public GameController()
     {
         player = new Coordinate(random.Next(minValue: 0, maxValue: mapSizeX), random.Next(minValue: 0, maxValue: mapSizeY));
 
@@ -36,12 +94,10 @@ public class Game
 
         if (ValidatePosition(newPosition))
         {
-            player = new Coordinate(
-                Math.Min(mapSizeX - 1, Math.Max(0, newPosition.X)),
-                Math.Min(mapSizeY - 1, Math.Max(0, newPosition.Y)));
+            player = newPosition;
             StepCount++;
 
-            if (player.X == target.X && player.Y == target.Y)
+            if (player == target)
             {
                 return (Moved: true, Won: true);
             }
@@ -78,52 +134,24 @@ public class Game
     }
 }
 
-public class Coordinate
-{
-    public readonly int X;
-    public readonly int Y;
-
-    public Coordinate(int x, int y)
-    {
-        X = x;
-        Y = y;
-    }
-
-    public Coordinate Add(Coordinate other) 
-    {
-        return new Coordinate(X + other.X, Y + other.Y);
-    }
-
-    public double Distance(Coordinate other)
-    {
-        return Math.Sqrt(Math.Pow(X - other.X, 2) + Math.Pow(Y - other.Y, 2));
-    }
-
-    public int ManhattanDistance(Coordinate other)
-    {
-        return Math.Abs(X - other.X) + Math.Abs(Y - other.Y);
-    }
-
-    public static Coordinate Up = new Coordinate(0, -1);
-    public static Coordinate Down = new Coordinate(0, 1);
-    public static Coordinate Left = new Coordinate(-1, 0);
-    public static Coordinate Right = new Coordinate(1, 0);
-    public static Coordinate UpLeft = Up.Add(Left);
-    public static Coordinate UpRight = Up.Add(Right);
-    public static Coordinate DownLeft = Down.Add(Left);
-    public static Coordinate DownRight = Down.Add(Right);
-}
-
 public class Program
 {
+    private static IDictionary<ConsoleKey, Coordinate> keyMap = new Dictionary<ConsoleKey, Coordinate>
+    {
+        { ConsoleKey.UpArrow, Coordinate.Up },
+        { ConsoleKey.RightArrow, Coordinate.Right },
+        { ConsoleKey.DownArrow, Coordinate.Down },
+        { ConsoleKey.LeftArrow, Coordinate.Left }
+    };
+
     public static void Main(string[] args)
     {
-        var game = new Game();
+        var game = new GameController();
 
         Console.WriteLine("Welcome to 'Fishing in the dark'");
         Console.WriteLine();
         Console.WriteLine("Use the arrow keys and try to catch the robber.");
-        Console.WriteLine("You can move straight pressing the same arrow key twice or diagonally by pressing two different arrow keys subsequently.");
+        Console.WriteLine("You can move straight by pressing the same arrow key twice or diagonally by pressing two different arrow keys subsequently.");
         Console.WriteLine("After each step you will be told how far away you are from the robber.");
         Console.WriteLine();
         Console.WriteLine(game.Distance());
@@ -135,38 +163,18 @@ public class Program
             var keys = new List<ConsoleKey>();
             keys.Add(Console.ReadKey().Key);
             keys.Add(Console.ReadKey().Key);
-            if (keys.All(k => k == ConsoleKey.UpArrow)) {
-                result = game.Move(Coordinate.Up);
-            } 
-            else if (keys.All(k => k == ConsoleKey.RightArrow))
+
+            var movement = keys
+                .Where(k => keyMap.Keys.Contains(k))
+                .Distinct()
+                .Select(k => keyMap[k])
+                .Aggregate(Coordinate.Zero, (accu, v) => accu.Add(v));
+
+            if (movement != Coordinate.Zero)
             {
-                result = game.Move(Coordinate.Right);
+                result = game.Move(movement);
             }
-            else if (keys.All(k => k == ConsoleKey.DownArrow))
-            {
-                result = game.Move(Coordinate.Down);
-            }
-            else if (keys.All(k => k == ConsoleKey.LeftArrow))
-            {
-                result = game.Move(Coordinate.Left);
-            }
-            else if (keys.Any(k => k == ConsoleKey.UpArrow) && keys.Any(k => k == ConsoleKey.LeftArrow))
-            {
-                result = game.Move(Coordinate.UpLeft);
-            }
-            else if (keys.Any(k => k == ConsoleKey.UpArrow) && keys.Any(k => k == ConsoleKey.RightArrow))
-            {
-                result = game.Move(Coordinate.UpRight);
-            }
-            else if (keys.Any(k => k == ConsoleKey.DownArrow) && keys.Any(k => k == ConsoleKey.LeftArrow))
-            {
-                result = game.Move(Coordinate.DownLeft);
-            }
-            else if (keys.Any(k => k == ConsoleKey.DownArrow) && keys.Any(k => k == ConsoleKey.RightArrow))
-            {
-                result = game.Move(Coordinate.DownRight);
-            }
-            else 
+            else
             {
                 Console.WriteLine("Invalid input.");
             }
