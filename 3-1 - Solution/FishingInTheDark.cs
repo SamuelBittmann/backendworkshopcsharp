@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 /*
-Exercise 3b
+Exercise 3b (Solution)
 -----------
 
 You are a game developer and you have just finished your next masterpiece.
@@ -155,27 +155,34 @@ public class Game
         { ConsoleKey.LeftArrow, Coordinate.Left }
     };
 
-    private readonly GameController controller = new GameController();
+    public delegate string FormatOutput(string text);
+    public delegate string FormatDistance(double distanceMeters);
 
-    //(1) Add a constructor which receives delegate methods for formatting the output.
-    //    Make one for formatting a line and one for converting the distance in meters into
-    //    a display string.
+    private readonly FormatOutput formatOutput;
+    private readonly FormatDistance formatDistance;
+    private readonly GameController controller;
+
+    public Game(FormatOutput formatOutput, FormatDistance formatDistance)
+    {
+        this.formatOutput = formatOutput;
+        this.formatDistance = formatDistance;
+        controller = new GameController();
+    }
 
     public void Run()
     {
-        //(2) Format all strings before writing them to the console
-        Console.WriteLine("Welcome to 'Fishing in the dark'");
-        Console.WriteLine();
-        Console.WriteLine("Use the arrow keys and try to catch the robber.");
-        Console.WriteLine("You can move straight by pressing the same arrow key twice or diagonally by pressing two different arrow keys subsequently.");
-        Console.WriteLine("After each step you will be told how far away you are from the robber.");
-        Console.WriteLine();
+        WriteLine("Welcome to 'Fishing in the dark'");
+        WriteLine();
+        WriteLine("Use the arrow keys and try to catch the robber.");
+        WriteLine("You can move straight by pressing the same arrow key twice or diagonally by pressing two different arrow keys subsequently.");
+        WriteLine("After each step you will be told how far away you are from the robber.");
+        WriteLine();
         WriteDistance();
-        Console.WriteLine();
+        WriteLine();
 
         var result = (Moved: true, Won: false);
         do {
-            Console.WriteLine("Your move: ");
+            WriteLine("Your move: ");
             var keys = new List<ConsoleKey>();
             keys.Add(Console.ReadKey().Key);
             keys.Add(Console.ReadKey().Key);
@@ -192,27 +199,34 @@ public class Game
             }
             else
             {
-                Console.WriteLine("Invalid input.");
+                WriteLine("Invalid input.");
             }
 
             if (!result.Moved)
             {
-                Console.WriteLine("Oops, looks like you hit a wall...");
+                WriteLine("Oops, looks like you hit a wall...");
             }
             else
             {
                 WriteDistance();
-                Console.WriteLine();
+                WriteLine();
             }
         } while (!result.Won);
 
-        Console.WriteLine($"Yay!! You caught the bad guy in {controller.StepCount} steps :)");
+        WriteLine($"Yay!! You caught the bad guy in {controller.StepCount} steps :)");
+    }
+
+    private void WriteLine() => WriteLine("");
+
+    private void WriteLine(string text)
+    {
+        Console.WriteLine(formatOutput(text));
     }
 
     private void WriteDistance()
     {
-        //(3) Call the delegate for formatting the distance
-        Console.WriteLine($"You are {controller.Distance:0.00} meters away.");
+        var distance = formatDistance(controller.Distance);
+        WriteLine($"You are {distance} away.");
     }
 }
 
@@ -220,7 +234,32 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        var game = new Game();
+        PublisherA();
+
+        // PublisherB();
+    }
+
+    private static void PublisherA()
+    {
+        Game.FormatOutput formatOutput = delegate(string text)
+        {
+            return $"> {text}";
+        };
+
+        Game.FormatDistance formatDistance = delegate(double distance)
+        {
+            return $"{distance:0.00} meters";
+        };
+
+        var game = new Game(formatOutput, formatDistance);
+        game.Run();
+    }
+
+    private static void PublisherB()
+    {
+        Game.FormatOutput formatOutput = text => text;
+
+        var game = new Game(formatOutput, FormatDistanceImperial);
         game.Run();
     }
 
