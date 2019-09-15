@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-#region HelperClasses
+#region GameInternal
 
 public struct Coordinate : IEquatable<Coordinate>
 {
@@ -16,9 +16,9 @@ public struct Coordinate : IEquatable<Coordinate>
         Y = y;
     }
 
-    public Coordinate Add(Coordinate other) 
+    public static Coordinate operator +(Coordinate left, Coordinate right)
     {
-        return new Coordinate(X + other.X, Y + other.Y);
+        return new Coordinate(left.X + right.X, left.Y + right.Y);
     }
 
     public double Distance(Coordinate other)
@@ -58,9 +58,6 @@ public struct Coordinate : IEquatable<Coordinate>
     public static Coordinate Zero = new Coordinate(0, 0);
 }
 
-#endregion
-
-
 public class GameController
 {
     private const int mapSizeX = 10;
@@ -77,6 +74,7 @@ public class GameController
     private Coordinate target;
     private readonly Random random = new Random();
     public int StepCount { get; private set; } = 0;
+    public double Distance => player.Distance(target);
 
     public GameController()
     {
@@ -90,33 +88,30 @@ public class GameController
 
     public (bool Moved, bool Won) Move(Coordinate direction)
     {
-        var newPosition = player.Add(direction);
+        var newPosition = player + direction;
 
-        if (ValidatePosition(newPosition))
+        if (!ValidatePosition(newPosition))
         {
-            player = newPosition;
-            StepCount++;
+            return (Moved: false, Won: false);
+        }
+        
+        player = newPosition;
+        StepCount++;
 
-            if (player == target)
-            {
-                return (Moved: true, Won: true);
-            }
-            else
-            {
-                Coordinate newTargetPosition;
-                do 
-                {
-                    direction = directions[random.Next(0, 4)];
-                    newTargetPosition = target.Add(direction);
-                } while(!ValidatePosition(newTargetPosition) || (newTargetPosition.X == player.X && newTargetPosition.Y == player.Y));
-                target = newTargetPosition;
-
-                return (Moved: true, Won: false);
-            }
+        if (player == target)
+        {
+            return (Moved: true, Won: true);
         }
         else
         {
-            return (Moved: false, Won: false);
+            Coordinate newTargetPosition;
+            do 
+            {
+                newTargetPosition = target + directions[random.Next(0, 4)];
+            } while(!ValidatePosition(newTargetPosition) || newTargetPosition == player);
+            target = newTargetPosition;
+
+            return (Moved: true, Won: false);
         }
     }
 
@@ -127,14 +122,13 @@ public class GameController
             && position.Y >= 0 
             && position.Y < mapSizeY;
     }
-
-    public string Distance()
-    {
-        return $"You are {player.Distance(target):0.00} meters away.";
-    }
 }
 
-public class Program
+
+#endregion
+
+
+public class Game
 {
     private static IDictionary<ConsoleKey, Coordinate> keyMap = new Dictionary<ConsoleKey, Coordinate>
     {
@@ -144,7 +138,7 @@ public class Program
         { ConsoleKey.LeftArrow, Coordinate.Left }
     };
 
-    public static void Main(string[] args)
+    public void Run()
     {
         var game = new GameController();
 
@@ -154,7 +148,7 @@ public class Program
         Console.WriteLine("You can move straight by pressing the same arrow key twice or diagonally by pressing two different arrow keys subsequently.");
         Console.WriteLine("After each step you will be told how far away you are from the robber.");
         Console.WriteLine();
-        Console.WriteLine(game.Distance());
+        Console.WriteLine($"You are {game.Distance:0.00} meters away.");
         Console.WriteLine();
 
         var result = (Moved: true, Won: false);
@@ -168,7 +162,7 @@ public class Program
                 .Where(k => keyMap.Keys.Contains(k))
                 .Distinct()
                 .Select(k => keyMap[k])
-                .Aggregate(Coordinate.Zero, (accu, v) => accu.Add(v));
+                .Aggregate(Coordinate.Zero, (accu, v) => accu + v);
 
             if (movement != Coordinate.Zero)
             {
@@ -185,11 +179,20 @@ public class Program
             }
             else
             {
-                Console.WriteLine(game.Distance());
+                Console.WriteLine($"You are {game.Distance:0.00} meters away.");
                 Console.WriteLine();
             }
         } while (!result.Won);
 
         Console.WriteLine($"Yay!! You caught the bad guy in {game.StepCount} steps :)");
+    }
+}
+
+public static class Program
+{
+    public static void Main(string[] args)
+    {
+        var game = new Game();
+        game.Run();
     }
 }
