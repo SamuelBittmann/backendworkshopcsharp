@@ -1,6 +1,7 @@
 using System.Threading;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public class Game
 {
@@ -16,11 +17,11 @@ public class Game
 
     private Coordinate player;
     private Coordinate target;
-    private Random random;
+    private readonly Random random = new Random();
+    public int StepCount { get; private set; } = 0;
 
     public Game()
     {
-        random = new Random();
         player = new Coordinate(random.Next(minValue: 0, maxValue: mapSizeX), random.Next(minValue: 0, maxValue: mapSizeY));
 
         do 
@@ -29,29 +30,46 @@ public class Game
         } while (target.ManhattanDistance(player) <= Math.Floor(mapSizeX / 2d));
     }
 
-    public bool Move(Coordinate direction)
+    public (bool Moved, bool Won) Move(Coordinate direction)
     {
         var newPosition = player.Add(direction);
-        player = new Coordinate(
-            Math.Min(mapSizeX - 1, Math.Max(0, newPosition.X)),
-            Math.Min(mapSizeY - 1, Math.Max(0, newPosition.Y)));
 
-        if (player.X == target.X && player.Y == target.Y)
+        if (ValidatePosition(newPosition))
         {
-            return true;
+            player = new Coordinate(
+                Math.Min(mapSizeX - 1, Math.Max(0, newPosition.X)),
+                Math.Min(mapSizeY - 1, Math.Max(0, newPosition.Y)));
+            StepCount++;
+
+            if (player.X == target.X && player.Y == target.Y)
+            {
+                return (Moved: true, Won: true);
+            }
+            else
+            {
+                Coordinate newTargetPosition;
+                do 
+                {
+                    direction = directions[random.Next(0, 4)];
+                    newTargetPosition = target.Add(direction);
+                } while(!ValidatePosition(newTargetPosition) || (newTargetPosition.X == player.X && newTargetPosition.Y == player.Y));
+                target = newTargetPosition;
+
+                return (Moved: true, Won: false);
+            }
         }
         else
         {
-            Coordinate newTargetPosition;
-            do 
-            {
-                direction = directions[random.Next(0, 4)];
-                newTargetPosition = target.Add(direction);
-            } while(newTargetPosition.X < 0 || newTargetPosition.X >= mapSizeX || newTargetPosition.Y < 0 || newTargetPosition.Y >= mapSizeY || (newTargetPosition.X == player.X && newTargetPosition.Y == player.Y));
-            target = newTargetPosition;
-
-            return false;
+            return (Moved: false, Won: false);
         }
+    }
+
+    private bool ValidatePosition(Coordinate position)
+    {
+        return position.X >= 0 
+            && position.X < mapSizeX 
+            && position.Y >= 0 
+            && position.Y < mapSizeY;
     }
 
     public string Distance()
@@ -90,6 +108,10 @@ public class Coordinate
     public static Coordinate Down = new Coordinate(0, 1);
     public static Coordinate Left = new Coordinate(-1, 0);
     public static Coordinate Right = new Coordinate(1, 0);
+    public static Coordinate UpLeft = Up.Add(Left);
+    public static Coordinate UpRight = Up.Add(Right);
+    public static Coordinate DownLeft = Down.Add(Left);
+    public static Coordinate DownRight = Down.Add(Right);
 }
 
 public class Program
@@ -100,41 +122,66 @@ public class Program
 
         Console.WriteLine("Welcome to 'Fishing in the dark'");
         Console.WriteLine();
-        Console.WriteLine("Move using the arrow key and try to catch the robber.");
+        Console.WriteLine("Use the arrow keys and try to catch the robber.");
+        Console.WriteLine("You can move straight pressing the same arrow key twice or diagonally by pressing two different arrow keys subsequently.");
         Console.WriteLine("After each step you will be told how far away you are from the robber.");
         Console.WriteLine();
         Console.WriteLine(game.Distance());
         Console.WriteLine();
 
-        var result = false;
+        var result = (Moved: true, Won: false);
         do {
             Console.Write("Your move: ");
-            var key = Console.ReadKey().Key;
-            if (key == ConsoleKey.UpArrow) {
+            var keys = new List<ConsoleKey>();
+            keys.Add(Console.ReadKey().Key);
+            keys.Add(Console.ReadKey().Key);
+            if (keys.All(k => k == ConsoleKey.UpArrow)) {
                 result = game.Move(Coordinate.Up);
             } 
-            else if (key == ConsoleKey.RightArrow)
+            else if (keys.All(k => k == ConsoleKey.RightArrow))
             {
                 result = game.Move(Coordinate.Right);
             }
-            else if (key == ConsoleKey.DownArrow)
+            else if (keys.All(k => k == ConsoleKey.DownArrow))
             {
                 result = game.Move(Coordinate.Down);
             }
-            else if (key == ConsoleKey.LeftArrow)
+            else if (keys.All(k => k == ConsoleKey.LeftArrow))
             {
                 result = game.Move(Coordinate.Left);
+            }
+            else if (keys.Any(k => k == ConsoleKey.UpArrow) && keys.Any(k => k == ConsoleKey.LeftArrow))
+            {
+                result = game.Move(Coordinate.UpLeft);
+            }
+            else if (keys.Any(k => k == ConsoleKey.UpArrow) && keys.Any(k => k == ConsoleKey.RightArrow))
+            {
+                result = game.Move(Coordinate.UpRight);
+            }
+            else if (keys.Any(k => k == ConsoleKey.DownArrow) && keys.Any(k => k == ConsoleKey.LeftArrow))
+            {
+                result = game.Move(Coordinate.DownLeft);
+            }
+            else if (keys.Any(k => k == ConsoleKey.DownArrow) && keys.Any(k => k == ConsoleKey.RightArrow))
+            {
+                result = game.Move(Coordinate.DownRight);
             }
             else 
             {
                 Console.WriteLine("Invalid input.");
             }
 
-            Console.WriteLine(game.Distance());
-            Console.WriteLine();
-            
-        } while (!result);
+            if (!result.Moved)
+            {
+                Console.WriteLine("Oops, looks like you hit a wall...");
+            }
+            else
+            {
+                Console.WriteLine(game.Distance());
+                Console.WriteLine();
+            }
+        } while (!result.Won);
 
-        Console.WriteLine("Congratulations!! You caught the bad guy :)");
+        Console.WriteLine($"Yay!! You caught the bad guy in {game.StepCount} steps :)");
     }
 }
