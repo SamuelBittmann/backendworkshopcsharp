@@ -31,7 +31,7 @@ public class DiscriminatingShop
     {
         var rich = args.Any(a => a == "--rich");
         var calculator = new PriceCalculator(rich);
-        var prices = new List<decimal> { 1.25m, 551.35m, 1024m, 8.30m };
+        var prices = Enumerable.Range(0, 5).Select(i => (2^i) * 1m ).ToList();
 
         string pricesAdjusted = prices
             .Where(p => p >= 2m)    //(1) Remove prices that are lower than 2 dollars.
