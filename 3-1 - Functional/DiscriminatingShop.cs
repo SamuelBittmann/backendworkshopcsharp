@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 
 /*
+Exercise 3a
+-----------
+
 Let's make some money by selling some stuff in our store which sets the price
 according to the customers wealth. Sounds neat, right? Customer tailored
 prices are great because let's face it, if you're rich enough you can't
