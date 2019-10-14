@@ -6,14 +6,6 @@ using System.Net;
 using System.Text;
 using System.Linq;
 
-/*
-Exercise 4
-----------
-
-Galaxus or digitec, which shop is funnier? Let's find out!
-
-*/
-
 #region Internal
 
 internal class Data
@@ -46,32 +38,32 @@ public static class Program
 {
     private static readonly Stopwatch sw = new Stopwatch();
 
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         if (args.Any(a => a == "--benchmark"))
         {
-            var perfResult = RunBenchmark();
+            var perfResult = await RunBenchmark();
             Console.WriteLine($"Loading the data took on average {perfResult.perfDataLoading:0.00} ms");
             Console.WriteLine($"Processing the data took on average {perfResult.perfDataExamination:0.00} ms");
         }
         else
         {
-            var data = LoadData();
-            var counts = ExamineData(data);
+            var data = await LoadData();
+            var counts = await ExamineData(data);
             Console.WriteLine($"Galaxus ha count: {counts.hasGalaxus}");
             Console.WriteLine($"Digitec ha count: {counts.hasDigitec}");
         }
     }
 
-    private static (double perfDataLoading, double perfDataExamination) RunBenchmark()
+    private static async Task<(double perfDataLoading, double perfDataExamination)> RunBenchmark()
     {
         var loadingAvg = 0d;
         var examinationAvg = 0d;
 
         for (var i = 0; i < 20; i++)
         {
-            var load = Time(LoadData);
-            var examine = Time(() => ExamineData(load.result));
+            var load = await Time(LoadData);
+            var examine = await Time(() => ExamineData(load.result));
             loadingAvg += load.elapsedMs / 20;
             examinationAvg += examine.elapsedMs / 20;
         }
@@ -79,38 +71,41 @@ public static class Program
         return (perfDataLoading: loadingAvg, perfDataExamination: examinationAvg);
     }
 
-    private static (double elapsedMs, T result) Time<T>(Func<T> func)
+    private static async Task<(double elapsedMs, T result)> Time<T>(Func<Task<T>> func)
     {
         sw.Start();
-        var result = func();
+        var result = await func();
         sw.Stop();
         var elapsedMs = sw.ElapsedMilliseconds;
         sw.Reset();
         return (elapsedMs: elapsedMs, result: result);
     }
 
-    private static Data LoadData()
+    private static async Task<Data> LoadData()
     {
         using (var client1 = new WebClient())
         using (var client2 = new WebClient())
         {
-            var dataGalaxus = client1.DownloadData("https://www.galaxus.ch/");
-            var dataDigitec = client2.DownloadData("https://www.digitec.ch/");
+            var taskGalaxus = client1.DownloadDataTaskAsync("https://www.galaxus.ch/");
+            var taskDigitec = client2.DownloadDataTaskAsync("https://www.digitec.ch/");
 
-            return new Data(dataGalaxus, dataDigitec);
+            return new Data(dataGalaxus: await taskGalaxus, dataDigitec: await taskDigitec);
         }
     }
 
-    private static HaCounts ExamineData(Data data)
+    private static async Task<HaCounts> ExamineData(Data data)
     {
-        var galaxusHas = CountHas(data.dataGalaxus);
-        var digitecHas = CountHas(data.dataDigitec);
-        return new HaCounts(galaxusHas, digitecHas);
+        var galaxusTask = CountHas(data.dataGalaxus);
+        var digitecTask = CountHas(data.dataDigitec);
+        return new HaCounts(await galaxusTask, await digitecTask);
     }
 
-    private static int CountHas(byte[] data)
+    private static Task<int> CountHas(byte[] data)
     {
-        var decoded = Encoding.UTF8.GetString(data);
-        return decoded.ToLower().Replace(" ", "").Split("ha").Length - 1;
+        return Task.Run(() =>
+        {
+            var decoded = Encoding.UTF8.GetString(data);
+            return decoded.ToLower().Replace(" ", "").Split("ha").Length - 1;
+        });
     }
 }
