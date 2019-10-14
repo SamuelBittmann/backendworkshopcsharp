@@ -34,12 +34,12 @@ public class DiscriminatingShop
     {
         var rich = args.Any(a => a == "--rich");
         var calculator = new PriceCalculator(rich);
-        var prices = Enumerable.Range(0, 5).Select(i => (2^i) * 1m ).ToList();
+        var prices = Enumerable.Range(0, 5).Select(i => (2 ^ i) * 1m).ToList();
 
         string pricesAdjusted = prices
             .Where(p => p >= 2m)    //(1) Remove prices that are lower than 2 dollars.
             .Select(calculator.CalculatePrice)  //(2) Transform the prices using the calculator.
-            .Aggregate("", (accu, v) => accu + ", " + v);   //(3) Reduce the list into a string.
+            .Aggregate("", (accu, v) => accu + v + ", ");   //(3) Reduce the list into a string.
 
         Console.WriteLine(pricesAdjusted);
     }

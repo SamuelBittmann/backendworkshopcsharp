@@ -6,7 +6,7 @@ using System.Net;
 using System.Text;
 
 #region Internal
-internal class Data 
+internal class Data
 {
     public readonly byte[] dataGalaxus;
     public readonly byte[] dataDigitec;
@@ -18,7 +18,7 @@ internal class Data
     }
 }
 
-internal class HaCounts 
+internal class HaCounts
 {
     public readonly int hasGalaxus;
     public readonly int hasDigitec;
@@ -33,17 +33,17 @@ internal class HaCounts
 
 public static class Program
 {
-    public static void Main(string[] args) 
-    {        
+    public static void Main(string[] args)
+    {
         var sw = new Stopwatch();
         sw.Start();
         var data = LoadData();
         var counts = ExamineData(data);
-        
+
         sw.Stop();
         Console.WriteLine($"Reading the files took {sw.Elapsed.TotalMilliseconds} ms.");
-        Console.WriteLine($"Galaxus lol count: {counts.hasGalaxus}");
-        Console.WriteLine($"Digitec lol count: {counts.hasDigitec}");
+        Console.WriteLine($"Galaxus ha count: {counts.hasGalaxus}");
+        Console.WriteLine($"Digitec ha count: {counts.hasDigitec}");
     }
 
     private static Data LoadData()
