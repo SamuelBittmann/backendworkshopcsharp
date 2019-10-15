@@ -10,7 +10,18 @@ using System.Linq;
 Exercise 4
 ----------
 
-Galaxus or digitec, which shop is funnier? Let's find out!
+Galaxus or digitec, which shop is funnier? Let's find out! I have written a little
+tool for comparing the two shops. Unfortunately, somehow this little tool became critical
+to the business and is now running 24/7 on a server. Thus, the requirements regarding its
+performance have changed. You have now been tasked with improving the speed of the
+application. To help you a bit, I have added a benchmark, which can be run by providing
+the --benchmark flag. This should allow you to verify your progress along the way.
+
+Use the appropriate techniques for optimizing I/O and CPU bound operatoins using async/await
+and tasks.
+
+HINT: Since C# 7.1 it is possible to declare the entry point, i.e. the Main(...) method, 
+async.
 
 */
 
@@ -89,6 +100,8 @@ public static class Program
         return (elapsedMs: elapsedMs, result: result);
     }
 
+    //(1) Improve this method by loading both pages asynchronously. For this, use 
+    //DownloadDataTaskAsync(...) instead of DownloadData(...).
     private static Data LoadData()
     {
         using (var client1 = new WebClient())
@@ -101,6 +114,7 @@ public static class Program
         }
     }
 
+    //(2) Process the data for both pages in parallel.
     private static HaCounts ExamineData(Data data)
     {
         var galaxusHas = CountHas(data.dataGalaxus);
