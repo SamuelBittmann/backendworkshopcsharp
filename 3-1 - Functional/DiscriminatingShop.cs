@@ -40,12 +40,15 @@ public class DiscriminatingShop
 
         //(1) Populate the prices list. You can use Enumerable.Range(...)
         //or an iterator. Why not try both? ;)
-        var prices = new List<decimal>();
+        var prices = Enumerable.Range(1,5);
 
+        var pricesAdjusted = prices
         //(2) Remove prices that are lower than 2 dollars.
+            .Where(p => p >= 2)
         //(3) Transform the prices using the calculator.
+            .Select(p => calculator.CalculatePrice(p))
         //(4) Reduce the list into a string.
-        string pricesAdjusted;
+            .Aggregate((accu, p) => accu + p);
 
         Console.WriteLine(pricesAdjusted);
     }

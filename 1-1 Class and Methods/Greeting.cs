@@ -23,12 +23,17 @@ public class Greeting
         var firstName = args[0];
         var lastName = args[1];
 
-        var greeting = "";  // (3) Call method using named arguments
+        var greeting = GetGreeting(firstName: firstName, lastName: lastName, age: age);  // (3) Call method using named arguments
         Console.WriteLine(greeting);
     }
 
-    public static void GetGreeting()   // (1) Change method signature
+    public static string GetGreeting(string firstName, string lastName, int age )   // (1) Change method signature
     {
-        // (2) Insert code here
+        if (age >= 18)
+        {
+            return $"Hello, mr./mrs. {lastName}";
+        } else {
+            return $"Hi, {firstName}";
+        }
     }
 }

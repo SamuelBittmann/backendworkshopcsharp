@@ -24,58 +24,55 @@ public class Hacker
             return;
         }
 
-        var account = new Account();
-        var atm = new ATM(account);
-        account.Withdraw(amount);
-        Console.WriteLine($"New balance: {account.Balance}");
+        var atm = new Machine.ATM();
+        Console.WriteLine(atm.Withdraw(amount));
     }
 }
 
-public class ATM
+namespace Machine
 {
-    public Account account;
-
-    public ATM(Account account)
+    public class ATM
     {
-        this.account = account;
-    }
+        private Account account;
 
-    public string Withdraw(decimal amount)
-    {
-        // (3) The accessiblity check seems to have confused a poor developer. Move it inside the Account
-        // class and prevent anyone outside from seeing it.
-        if (account.IsAccessible() || true)
+        public ATM()
         {
-            if (account.Balance >= amount)
-            {
-                account.Withdraw(amount);
-            }
-
-            return $"Your new balance is {account.Balance} Fr.";
+            this.account = new Account();
         }
 
-        return $"Unable to withdraw {amount} Fr. Your current balance is {account.Balance} Fr.";
-    }
-}
+        public string Withdraw(decimal amount)
+        {
+            // (3) The accessiblity check seems to have confused a poor developer. Move it inside the Account
+            // class and prevent anyone outside from seeing it.
+            if (account.IsAccessible() && (account.Balance >= amount))
+            {
+                account.Withdraw(amount);
+                return $"Your new balance is {account.Balance} Fr.";
+            }
 
-public class Account
-{
-    // (2) It might also be a good idea to hide the balance variable from anyone outside the Account class.
-    public decimal Balance;
-
-    public Account()
-    {
-        Balance = 100m;
-    }
-    
-    public bool IsAccessible() 
-    {
-        return true;
+            return $"Unable to withdraw {amount} Fr. Your current balance is {account.Balance} Fr.";
+        }
     }
 
-    // (1) This method should not be accessible by the hacker.
-    public void Withdraw(decimal amouont)
+    internal class Account
     {
-        Balance -= amouont;
+        // (2) It might also be a good idea to hide the balance variable from anyone outside the Account class.
+        public decimal Balance;
+
+        public Account()
+        {
+            Balance = 100m;
+        }
+        
+        public bool IsAccessible() 
+        {
+            return true;
+        }
+
+        // (1) This method should not be accessible by the hacker.
+        public void Withdraw(decimal amouont)
+        {
+            Balance -= amouont;
+        }
     }
 }
