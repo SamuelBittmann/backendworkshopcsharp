@@ -95,11 +95,15 @@ public class GameController
 
     public GameController()
     {
-        player = new Coordinate(random.Next(minValue: 0, maxValue: mapSizeX), random.Next(minValue: 0, maxValue: mapSizeY));
+        player = new Coordinate(
+            random.Next(minValue: 0, maxValue: mapSizeX), 
+            random.Next(minValue: 0, maxValue: mapSizeY));
 
         do 
         {
-            target = new Coordinate(random.Next(minValue: 0, maxValue: mapSizeX), random.Next(minValue: 0, maxValue: mapSizeY));
+            target = new Coordinate(
+                random.Next(minValue: 0, maxValue: mapSizeX), 
+                random.Next(minValue: 0, maxValue: mapSizeY));
         } while (target.ManhattanDistance(player) <= Math.Floor(mapSizeX / 2d));
     }
 
@@ -147,7 +151,8 @@ public class GameController
 
 public class Game
 {
-    private static IDictionary<ConsoleKey, Coordinate> keyMap = new Dictionary<ConsoleKey, Coordinate>
+    private static IDictionary<ConsoleKey, Coordinate> keyMap 
+        = new Dictionary<ConsoleKey, Coordinate>
     {
         { ConsoleKey.UpArrow, Coordinate.Up },
         { ConsoleKey.RightArrow, Coordinate.Right },
@@ -174,13 +179,15 @@ public class Game
         WriteLine("Welcome to 'Fishing in the dark'");
         WriteLine();
         WriteLine("Use the arrow keys and try to catch the robber.");
-        WriteLine("You can move straight by pressing the same arrow key twice or diagonally by pressing two different arrow keys subsequently.");
+        WriteLine("You can move straight by pressing the same arrow key twice or diagonally by " 
+            + "pressing two different arrow keys subsequently.");
         WriteLine("After each step you will be told how far away you are from the robber.");
         WriteLine();
         WriteDistance();
         WriteLine();
 
         var result = (Moved: true, Won: false);
+        var exit = false;
         do {
             WriteLine("Your move: ");
             var keys = new List<ConsoleKey>();
@@ -197,9 +204,13 @@ public class Game
             {
                 result = controller.Move(movement);
             }
+            else if (keys.All(k => k == ConsoleKey.Q))
+            {
+                exit = true;
+            }
             else
             {
-                WriteLine("Invalid input.");
+                Console.WriteLine("Invalid input. Type 'qq' to quit.");
             }
 
             if (!result.Moved)
@@ -211,9 +222,12 @@ public class Game
                 WriteDistance();
                 WriteLine();
             }
-        } while (!result.Won);
+        } while (!result.Won || exit);
 
-        WriteLine($"Yay!! You caught the bad guy in {controller.StepCount} steps :)");
+        if (result.Won)
+        {
+            Console.WriteLine($"Yay!! You caught the bad guy in {controller.StepCount} steps :)");
+        }
     }
 
     private void WriteLine() => WriteLine("");
