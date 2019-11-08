@@ -45,7 +45,7 @@ public class DiscriminatingShop
         //(2) Remove prices that are lower than 2 dollars.
         //(3) Transform the prices using the calculator.
         //(4) Reduce the list into a string.
-        string pricesAdjusted;
+        string pricesAdjusted = "";
 
         Console.WriteLine(pricesAdjusted);
     }
